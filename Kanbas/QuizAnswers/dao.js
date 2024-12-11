@@ -1,4 +1,4 @@
-import { findQuestionsForQuiz } from "../Questions/dao.js";
+import { findQuestionsForQuiz } from "../QuizQuestions/dao.js";
 import model from "./model.js";
 import quizModel from "../Quizzes/model.js";
 
