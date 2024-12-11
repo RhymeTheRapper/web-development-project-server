@@ -9,6 +9,9 @@ import ModuleRoutes from "./Kanbas/Modules/routes.js";
 import AssignmentRoutes from "./Kanbas/Assignments/routes.js";
 import "dotenv/config";
 import EnrollmentsRoutes from './Kanbas/Enrollments/routes.js';
+import QuizRoutes from "./Kanbas/Quizzes/routes.js";
+import QuizQuestionsRoutes from "./Kanbas/QuizQuestions/routes.js";
+import QuizAnswersRoutes from "./Kanbas/QuizAnswers/routes.js";
 import mongoose from "mongoose";
 const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas"
 mongoose.connect(CONNECTION_STRING);
@@ -39,6 +42,9 @@ CourseRoutes(app);
 ModuleRoutes(app);
 AssignmentRoutes(app);
 EnrollmentsRoutes(app);
+QuizRoutes(app);
+QuizQuestionsRoutes(app);
+QuizAnswersRoutes(app);
 Lab5(app);
 Hello(app);
 app.listen(process.env.PORT || 4000)
