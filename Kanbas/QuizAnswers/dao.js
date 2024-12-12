@@ -48,14 +48,28 @@ export async function addAttempt(quizId, userId) {
 
         const questions = await findQuestionsForQuiz(quizId);
         questions.forEach((question) => {
-            const userAnswer = answer.answers.get(question._id);
-            if (
-                (question.type === "Fill-in-the-Blank" && question.choices.includes(userAnswer)) ||
-                (question.answer === userAnswer)
-            ) {
-                answer.score += question.points;
+            // Find the matching answer in the answers array
+            const userAnswer = answer.answers.find(a => a.questionId.toString() === question._id.toString());
+            
+            if (userAnswer) {
+                // Check if answer is correct based on question type
+                let isCorrect = false;
+                if (question.type === "Fill-in-the-Blank") {
+                    isCorrect = question.correctAnswers.includes(userAnswer.answer);
+                } else if (question.type === "True/False") {
+                    isCorrect = question.correctAnswer === (userAnswer.answer.toLowerCase() === 'true');
+                } else if (question.type === "Multiple Choice") {
+                    const correctOption = question.options.find(opt => opt.isCorrect);
+                    isCorrect = correctOption && correctOption.text === userAnswer.answer;
+                }
+
+                // Update the answer's correctness and points
+                userAnswer.isCorrect = isCorrect;
+                userAnswer.pointsEarned = isCorrect ? question.points : 0;
+                answer.score += userAnswer.pointsEarned;
             }
         });
+        
         return answer.save();
     }
     return false;
@@ -63,30 +77,29 @@ export async function addAttempt(quizId, userId) {
 
 // Start a new attempt for a quiz
 export async function newAttempt(quizId, userId) {
-    const quiz = await quizModel.findById(quizId);
-    const answer = await model.findOne({ quiz: quizId, user: userId });
+    // First, get all questions for this quiz
+    const questions = await findQuestionsForQuiz(quizId);
+    
+    // Initialize answers array with default values for each question
+    const initialAnswers = questions.map(question => ({
+        questionId: question._id,
+        answer: "",           // Empty string as initial answer
+        isCorrect: false,     // Default to false
+        pointsEarned: 0      // Default to 0 points
+    }));
 
-    const withinDateRange =
-        new Date(quiz.until) > new Date() &&
-        new Date(quiz.available) < new Date() &&
-        new Date(quiz.due) > new Date();
-
-    if (answer) {
-        if ((quiz.number_of_attempts > answer.attempt || quiz.number_of_attempts === 0) && withinDateRange) {
-            answer.answers = {};
-            answer.finished = false;
-            return answer.save();
-        }
-        return false;
-    }
-
-    return model.create({
+    // Create new attempt with initialized answers
+    const newAttempt = {
         quiz: quizId,
         user: userId,
-        attempt: 1,
-        answers: {},
+        attempt: 1,          // You might want to count existing attempts and increment
+        score: 0,
+        answers: initialAnswers,
         finished: false,
-    });
+        date: new Date()
+    };
+
+    return model.create(newAttempt);
 }
 
 // Update an existing answer

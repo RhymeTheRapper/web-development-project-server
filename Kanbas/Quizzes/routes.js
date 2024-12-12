@@ -15,13 +15,26 @@ export default function QuizzesRoutes(app) {
     });
 
     // Creates a new quiz
-    app.post("/api/quizzes", async (req, res) => {
-        const newQuiz = req.body;
-        const createdQuiz = await quizzesDao.createQuiz(newQuiz);
-        res.status(201).json({
-            message: `Quiz: "${createdQuiz.title}" has been created`,
-            quiz: createdQuiz,
-        });
+    app.post("/api/courses/:courseId/quizzes", async (req, res) => {
+        try {
+            const { courseId } = req.params;
+            const newQuiz = {
+                ...req.body,
+                course: courseId  // Ensure courseId is set in the quiz object
+            };
+            
+            const createdQuiz = await quizzesDao.createQuiz(newQuiz);
+            res.status(201).json({
+                message: `Quiz: "${createdQuiz.title}" has been created`,
+                quiz: createdQuiz
+            });
+        } catch (error) {
+            console.error("Error creating quiz:", error);
+            res.status(500).json({ 
+                message: "Error creating quiz", 
+                error: error.message 
+            });
+        }
     });
 
     // Updates an existing quiz
